@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import kotlinx.coroutines.*
 
 class ServerService : Service() {
     companion object {
@@ -20,31 +19,18 @@ class ServerService : Service() {
         }
     }
 
-    private var httpServer: HttpServer? = null
-    private var p2pManager: P2PManager? = null
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createNotification("Запуск..."))
-        Storage.init(this)
-        p2pManager = P2PManager(this)
-        httpServer = HttpServer(8080)
+        startForeground(NOTIFICATION_ID, createNotification("Сервер запущен"))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        httpServer?.start()
-        p2pManager?.start()
-        updateNotification("Сервер активен на порту 8080")
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        httpServer?.stop()
-        p2pManager?.stop()
-        scope.cancel()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -68,11 +54,5 @@ class ServerService : Service() {
             .setSmallIcon(android.R.drawable.ic_menu_share)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
-    }
-
-    private fun updateNotification(text: String) {
-        val notification = createNotification(text)
-        val manager = getSystemService(NotificationManager::class.java)
-        manager?.notify(NOTIFICATION_ID, notification)
     }
 }
