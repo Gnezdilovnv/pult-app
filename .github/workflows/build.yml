@@ -15,22 +15,30 @@ jobs:
       - uses: gradle/gradle-build-action@v3
       - name: Build APK
         run: ./gradlew assembleDebug --stacktrace
-      - name: List all output files
+      - name: Find all APK files
+        id: find_apk
         run: |
-          echo "=== Listing all APK files ==="
-          find . -name "*.apk" -ls || echo "No APK files found"
-          echo "=== Listing app/build directory ==="
-          ls -la app/build/ || echo "app/build not found"
-          echo "=== Listing app/build/outputs ==="
-          ls -la app/build/outputs/ || echo "app/build/outputs not found"
-          echo "=== Checking Gradle tasks ==="
-          ./gradlew tasks --all
+          echo "=== Поиск всех APK файлов ==="
+          find . -type f -name "*.apk" -exec ls -la {} \;
+          APK_PATH=$(find . -type f -name "*.apk" | head -1)
+          if [ -n "$APK_PATH" ]; then
+            echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+            echo "✅ APK найден: $APK_PATH"
+          else
+            echo "❌ APK не найден"
+          fi
       - name: Upload APK
+        if: steps.find_apk.outputs.apk_path != ''
         uses: actions/upload-artifact@v4
         with:
           name: p2p-json-hub
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/*/*.apk
-            **/*.apk
-          if-no-files-found: warn
+          path: ${{ steps.find_apk.outputs.apk_path }}
+      - name: Debug build output
+        if: steps.find_apk.outputs.apk_path == ''
+        run: |
+          echo "=== app/build/contents ==="
+          ls -la app/build/ || echo "app/build not found"
+          echo "=== app/build/outputs/ ==="
+          ls -la app/build/outputs/ || echo "app/build/outputs not found"
+          echo "=== app/build/outputs/apk/ ==="
+          ls -la app/build/outputs/apk/ || echo "app/build/outputs/apk not found"
