@@ -14,7 +14,11 @@ jobs:
           distribution: 'temurin'
       - uses: gradle/gradle-build-action@v3
       - run: ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
+      - name: List APK files
+        run: find app/build -name "*.apk" -ls || echo "No APK found"
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: p2p-json-hub
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
