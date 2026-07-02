@@ -1,0 +1,2 @@
+rootProject.name = "P2PJSONHub"
+include ':app'
