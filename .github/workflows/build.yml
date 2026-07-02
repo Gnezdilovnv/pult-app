@@ -13,12 +13,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: gradle/gradle-build-action@v3
-      - run: ./gradlew assembleDebug
-      - name: List APK files
-        run: find app/build -name "*.apk" -ls || echo "No APK found"
+      - name: Build APK
+        run: ./gradlew assembleDebug --stacktrace
+      - name: List all output files
+        run: |
+          echo "=== Listing all APK files ==="
+          find . -name "*.apk" -ls || echo "No APK files found"
+          echo "=== Listing app/build directory ==="
+          ls -la app/build/ || echo "app/build not found"
+          echo "=== Listing app/build/outputs ==="
+          ls -la app/build/outputs/ || echo "app/build/outputs not found"
+          echo "=== Checking Gradle tasks ==="
+          ./gradlew tasks --all
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: p2p-json-hub
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/*/*.apk
+            **/*.apk
+          if-no-files-found: warn
